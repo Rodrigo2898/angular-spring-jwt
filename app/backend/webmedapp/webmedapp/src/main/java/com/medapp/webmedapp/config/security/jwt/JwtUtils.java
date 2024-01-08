@@ -16,16 +16,29 @@ import java.util.Date;
 public class JwtUtils {
     private static final Logger logger = LoggerFactory.getLogger(JwtUtils.class);
     private static final String jwtSecret = "a/+d=druuu=46inubpj0kkfig=974c+3u7sdfghjk122763762nrjffni3456789/+sdfghj=werty456df";
-    private static final Integer jwtExpirations = 999999999;
+    private static final Integer jwtExpirationMs = 12;
+
+//    public String generateJwtToken(Authentication authentication) {
+//        UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
+//
+//        return Jwts.builder()
+//                .subject((userPrincipal.getUsername()))
+//                .issuedAt(new Date())
+//                .expiration(new Date((new Date()).getTime() + jwtExpirations))
+//                .signWith(key(), SignatureAlgorithm.HS256)
+//                .compact();
+//    }
 
     public String generateJwtToken(Authentication authentication) {
         UserDetailsImpl userPrincipal = (UserDetailsImpl) authentication.getPrincipal();
 
-        return Jwts.builder()
-                .subject((userPrincipal.getUsername()))
-                .issuedAt(new Date())
-                .expiration(new Date((new Date()).getTime() + jwtExpirations))
-                .signWith(key(), SignatureAlgorithm.HS256)
+        return generateTokenFromUsername(userPrincipal.getUsername());
+    }
+
+    public String generateTokenFromUsername(String username) {
+        return Jwts.builder().subject(username).issuedAt(new Date())
+                .expiration(new Date((new Date()).getTime() + jwtExpirationMs))
+                .signWith(key(),SignatureAlgorithm.HS256)
                 .compact();
     }
 

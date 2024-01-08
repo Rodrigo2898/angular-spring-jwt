@@ -3,12 +3,16 @@ package com.medapp.webmedapp.service;
 import com.medapp.webmedapp.config.security.jwt.JwtUtils;
 import com.medapp.webmedapp.dto.payload.request.LoginRequest;
 import com.medapp.webmedapp.dto.payload.request.SignupRequest;
+import com.medapp.webmedapp.dto.payload.request.TokenRefreshRequest;
 import com.medapp.webmedapp.dto.payload.response.JwtResponse;
 import com.medapp.webmedapp.dto.payload.response.MessageResponse;
+import com.medapp.webmedapp.dto.payload.response.TokenRefreshResponse;
+import com.medapp.webmedapp.entity.RefreshToken;
 import com.medapp.webmedapp.entity.Role;
 import com.medapp.webmedapp.entity.UserDetailsImpl;
 import com.medapp.webmedapp.entity.Usuario;
 import com.medapp.webmedapp.entity.enums.ERole;
+import com.medapp.webmedapp.exceptions.TokenRefreshException;
 import com.medapp.webmedapp.repository.RoleRepository;
 import com.medapp.webmedapp.repository.UsuarioRepository;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -32,14 +36,16 @@ public class AuthService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder= new BCryptPasswordEncoder();
     private final JwtUtils jwtUtils;
+    private final RefreshTokenService refreshTokenService;
 
 
     public AuthService(AuthenticationManager authenticationManager, UsuarioRepository usuarioRepository,
-                       RoleRepository roleRepository, JwtUtils jwtUtils) {
+                       RoleRepository roleRepository, JwtUtils jwtUtils, RefreshTokenService refreshTokenService) {
         this.authenticationManager = authenticationManager;
         this.usuarioRepository = usuarioRepository;
         this.roleRepository = roleRepository;
         this.jwtUtils = jwtUtils;
+        this.refreshTokenService = refreshTokenService;
     }
 
     public JwtResponse authenticateUser(LoginRequest loginRequest) {
@@ -51,20 +57,35 @@ public class AuthService {
         );
 
         SecurityContextHolder.getContext().setAuthentication(authentication);
+        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         String jwt = jwtUtils.generateJwtToken(authentication);
 
-        UserDetailsImpl userDetails = (UserDetailsImpl) authentication.getPrincipal();
         List<String> roles = userDetails.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .toList();
 
+        RefreshToken refreshToken = refreshTokenService.createRefreshToken(userDetails.getId());
+
         return new JwtResponse(
                 jwt,
+                refreshToken.getToken(),
                 userDetails.getId(),
                 userDetails.getUsername(),
                 userDetails.getEmail(),
                 roles
         );
+    }
+
+    public TokenRefreshResponse refreshToken(TokenRefreshRequest request) {
+        String requestRefreshToken = request.getRefreshToken();
+
+        return refreshTokenService.findByToken(requestRefreshToken)
+                .map(refreshTokenService::verifyExpiration)
+                .map(RefreshToken::getUsuario)
+                .map(user -> {
+                    String token = jwtUtils.generateTokenFromUsername(user.getUsername());
+                    return new TokenRefreshResponse(token, requestRefreshToken);
+                }).orElseThrow(() -> new TokenRefreshException(requestRefreshToken, "Refresh token is not in database"));
     }
 
     public MessageResponse registerUser(SignupRequest signupRequest) {

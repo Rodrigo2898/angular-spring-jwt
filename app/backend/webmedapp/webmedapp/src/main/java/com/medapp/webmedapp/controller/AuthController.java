@@ -2,8 +2,10 @@ package com.medapp.webmedapp.controller;
 
 import com.medapp.webmedapp.dto.payload.request.LoginRequest;
 import com.medapp.webmedapp.dto.payload.request.SignupRequest;
+import com.medapp.webmedapp.dto.payload.request.TokenRefreshRequest;
 import com.medapp.webmedapp.dto.payload.response.JwtResponse;
 import com.medapp.webmedapp.dto.payload.response.MessageResponse;
+import com.medapp.webmedapp.dto.payload.response.TokenRefreshResponse;
 import com.medapp.webmedapp.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
@@ -30,5 +32,11 @@ public class AuthController {
     public ResponseEntity<?> registerUser(@Valid @RequestBody SignupRequest signupRequest) {
         MessageResponse messageResponse = authService.registerUser(signupRequest);
         return ResponseEntity.ok(messageResponse);
+    }
+
+    @PostMapping("/refreshtoken")
+    public ResponseEntity<?> refreshToken(@Valid @RequestBody TokenRefreshRequest request) {
+        TokenRefreshResponse response = authService.refreshToken(request);
+        return ResponseEntity.ok(response);
     }
 }
