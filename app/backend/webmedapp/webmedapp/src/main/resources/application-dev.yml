@@ -1,0 +1,8 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://localhost:5432/webservice
+    username: webservice
+    password: webservice
+  jpa:
+    hibernate:
+      ddl-auto: update

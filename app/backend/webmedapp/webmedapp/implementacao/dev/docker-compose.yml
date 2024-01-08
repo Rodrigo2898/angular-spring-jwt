@@ -1,0 +1,18 @@
+version: '3.9'
+services:
+  postgres:
+    image: db_webservice:v1
+    build: .
+    container_name: "db_webservice"
+    environment:
+      - POSTGRES_PASSWORD=webservice
+      - POSTGRES_USER=webservice
+      - POSTGRES_DB=webservice
+    restart: always
+    ports:
+      - "5432:5432"
+    networks:
+      - webservice
+networks:
+  webservice:
+    driver: bridge

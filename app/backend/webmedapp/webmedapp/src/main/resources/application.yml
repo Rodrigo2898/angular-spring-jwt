@@ -1,0 +1,23 @@
+logging:
+  file:
+    path: log
+  level:
+    org:
+      springframework:
+        web: debug
+  pattern:
+    file: '%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n'
+  logback:
+    rollingpolicy:
+      file-name-pattern: 'log/%d{yyyy-MM-dd}%i.log'
+spring:
+  profiles:
+    active: dev
+  jpa:
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: update
+caminho:
+  diretorio:
+    imagens: 'C:\\imagens'
